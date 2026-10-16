@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidSession(data) {
+      return data.keys().hasAll(['userId', 'date', 'poolLength', 'laps', 'distance', 'durationSeconds', 'paceSecondsPer100m']) &&
+        data.keys().hasOnly(['userId', 'date', 'poolLength', 'laps', 'distance', 'durationSeconds', 'paceSecondsPer100m', 'stroke', 'avgHeartRate', 'maxHeartRate', 'calories', 'poolName', 'notes', 'source', 'createdAt', 'updatedAt']) &&
+        data.userId == request.auth.uid &&
+        data.date is string && data.date.size() <= 10 &&
+        data.poolLength is number && data.poolLength >= 10 && data.poolLength <= 100 &&
+        data.laps is number && data.laps >= 1 && data.laps <= 1000 &&
+        data.distance is number && data.distance >= 10 && data.distance <= 100000 &&
+        data.durationSeconds is number && data.durationSeconds >= 1 && data.durationSeconds <= 86400 &&
+        data.paceSecondsPer100m is number && data.paceSecondsPer100m >= 10 && data.paceSecondsPer100m <= 600 &&
+        (!('stroke' in data) || (data.stroke is string && data.stroke.size() <= 50)) &&
+        (!('avgHeartRate' in data) || (data.avgHeartRate is number && data.avgHeartRate >= 30 && data.avgHeartRate <= 250)) &&
+        (!('maxHeartRate' in data) || (data.maxHeartRate is number && data.maxHeartRate >= 30 && data.maxHeartRate <= 250)) &&
+        (!('calories' in data) || (data.calories is number && data.calories >= 0 && data.calories <= 10000)) &&
+        (!('poolName' in data) || (data.poolName is string && data.poolName.size() <= 100)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('source' in data) || (data.source is string && data.source.size() <= 50)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['userId', 'defaultPoolLength', 'weeklyGoalMeters']) &&
+        data.keys().hasOnly(['userId', 'defaultPoolLength', 'weeklyGoalMeters', 'themePreference', 'updatedAt']) &&
+        data.userId == request.auth.uid &&
+        data.defaultPoolLength is number && data.defaultPoolLength >= 10 && data.defaultPoolLength <= 100 &&
+        data.weeklyGoalMeters is number && data.weeklyGoalMeters >= 0 && data.weeklyGoalMeters <= 100000 &&
+        (!('themePreference' in data) || (data.themePreference is string && data.themePreference.size() <= 20)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection test doc
+    match /test/{docId} {
+      allow get: if true;
+    }
+
+    // User data subcollections
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+
+      match /sessions/{sessionId} {
+        allow get, delete: if isSignedIn() && request.auth.uid == userId && isValidId(sessionId);
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(sessionId) && isValidSession(incoming());
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(sessionId) && isValidSession(incoming()) && incoming().userId == existing().userId;
+      }
+
+      match /settings/{settingsId} {
+        allow get, delete: if isSignedIn() && request.auth.uid == userId && isValidId(settingsId);
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(settingsId) && isValidSettings(incoming());
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(settingsId) && isValidSettings(incoming()) && incoming().userId == existing().userId;
+      }
+    }
+  }
+}

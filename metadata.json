@@ -1,0 +1,8 @@
+{
+  "name": "AquaTrack - Dzienniczek Pływania",
+  "description": "Nowoczesny dzienniczek pływania z synchronizacją w Firebase, rejestracją treningów z Apple Watch, analizą tempa, wykresami postępów i statystykami tygodniowymi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

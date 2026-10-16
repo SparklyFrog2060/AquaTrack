@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "SwimSession": {
+      "title": "SwimSession",
+      "description": "A recorded swimming session containing distance, lap count, duration, pace from Apple Watch, and additional metrics.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the swimmer.",
+          "maxLength": 128
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the workout in YYYY-MM-DD format.",
+          "maxLength": 10
+        },
+        "poolLength": {
+          "type": "number",
+          "description": "Length of the swimming pool in meters (e.g. 25 or 50)."
+        },
+        "laps": {
+          "type": "number",
+          "description": "Number of pool lengths swum."
+        },
+        "distance": {
+          "type": "number",
+          "description": "Total distance swum in meters (laps * poolLength)."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "Total active swimming duration in seconds."
+        },
+        "paceSecondsPer100m": {
+          "type": "number",
+          "description": "Pace in seconds per 100m (e.g., 115 for 1:55/100m)."
+        },
+        "stroke": {
+          "type": "string",
+          "description": "Primary swimming stroke (e.g., kraul, grzbiet, klasyczny, motylkowy, zmienny, mieszany).",
+          "maxLength": 50
+        },
+        "avgHeartRate": {
+          "type": "number",
+          "description": "Average heart rate in BPM recorded by Apple Watch."
+        },
+        "maxHeartRate": {
+          "type": "number",
+          "description": "Maximum heart rate in BPM recorded by Apple Watch."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Active calories burned in kcal."
+        },
+        "poolName": {
+          "type": "string",
+          "description": "Name or location of the swimming facility.",
+          "maxLength": 100
+        },
+        "notes": {
+          "type": "string",
+          "description": "Workout notes or split details.",
+          "maxLength": 1000
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of workout entry (e.g. apple_watch, manual).",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the record was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the record was last modified."
+        }
+      },
+      "required": ["userId", "date", "poolLength", "laps", "distance", "durationSeconds", "paceSecondsPer100m"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User preferences for pool length, weekly targets, and theme.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Firebase Auth UID."
+        },
+        "defaultPoolLength": {
+          "type": "number",
+          "description": "Default pool length in meters (e.g. 25 or 50)."
+        },
+        "weeklyGoalMeters": {
+          "type": "number",
+          "description": "Weekly swimming distance target in meters."
+        },
+        "themePreference": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Theme choice: dark, light, or system."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of settings update."
+        }
+      },
+      "required": ["userId", "defaultPoolLength", "weeklyGoalMeters"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": {
+        "$ref": "SwimSession"
+      },
+      "description": "Collection of recorded swim sessions for a specific user."
+    },
+    "/users/{userId}/settings/{settingsId}": {
+      "schema": {
+        "$ref": "UserSettings"
+      },
+      "description": "User profile settings including default pool length and targets."
+    }
+  }
+}
